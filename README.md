@@ -12,7 +12,7 @@ The following user/developer stories detail th
 
 ### Links and Resources
 
-- [GitHub Actions ci/cd]()
+- [GitHub Actions ci/cd](https://github.com/KenyaWomack/caps/actions/new)
 
 -[Deployed Site](https://caps-566w.onrender.com/)
 
