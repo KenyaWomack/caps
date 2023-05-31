@@ -1,22 +1,18 @@
 'use strict';
 
-// this is a less tethered example.  
-// think of the "hub" as the body listening to all of the body parts
+const eventPool = require('./eventPool');
 
-let eventEmitter = require('./eventEmitter');
+// making system aware of vendor and driver
+require('./vendor/index');
+require('./driver/index');
 
-// require the sun code, the hub will allow it to run as part of this "pool"
-require('./sun');
+// listeners: listen to all events and log expected content
+eventPool.on('pickup', (payload) => logger('pickup', payload));
+eventPool.on('in-transit', (payload) => logger('in-transit', payload));
+eventPool.on('delivered', (payload) => logger('delivered', payload));
 
-// handlers
-
-const driverHandler = require('./brain');
-const vendorHandler = require('./pupils');
-
-// listeners to all events
-// this can be called in the eyes/index.js file
-// multiple listeners performing diff operations:  NOI PROBLEM
-eventEmitter.on('SUNLIGHT', (payload) => console.log('something happened with sunlight', payload));
-eventEmitter.on('BRIGHTNESS', driverHandler);
-eventEmitter.on('DILATION', vendorHandler);
-
+// logs the event, a timestamp and the payload
+function logger(event, payload){
+  const timestamp = new Date();
+  console.log('EVENT: ', { event, timestamp, payload });
+}

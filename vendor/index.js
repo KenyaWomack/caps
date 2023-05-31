@@ -1,16 +1,17 @@
 'use strict';
 
-let eventEmitter = require('../eventEmitter');
+const { orderHandler, deliveredMessage }= require('./handler');
+const eventEmitter = require('../eventPool');
 
-const handler = require('./handler');
+// starts the event cycle, note that the pickup emit is inside the orderHandler
+setInterval(() => {
+  orderHandler();
+}, 5000);
 
-const vendorHandler = (payload) => {
-  setTimeout(() => {
-    // do the thing
-    handler(payload);
-  }, 1000);
-};
+eventEmitter.on('delivered', deliveredMessage);
 
-eventEmitter.on('SUNLIGHT', vendorHandler);
+// const { io } = require('socket.io-client');
+// const socket = io('http://localhost:3001/caps');
 
-module.exports = vendorHandler;
+// socket.on and handlers, and emits go here
+
