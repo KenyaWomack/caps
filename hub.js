@@ -9,7 +9,7 @@ let eventEmitter = require('./eventEmitter');
 require('./sun');
 
 // handlers
-require('./eyes');
+
 const driverHandler = require('./brain');
 const vendorHandler = require('./pupils');
 
