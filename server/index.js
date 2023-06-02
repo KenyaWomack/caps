@@ -3,6 +3,8 @@
 require('dotenv').config();
 const { Server } = require('socket.io');
 const PORT = process.env.PORT || 3001;
+const Queue = require('./lib/queue');
+const capsQueue = new Queue();
 
 // socket server singleton
 const server = new Server();
@@ -15,6 +17,11 @@ caps.on('connection', (socket) => {
   // confirmation that a client is connected
   console.log('connected to the caps namespace', socket.id);
 
+  socket.on('join', (room) => {
+    socket.join(room);
+    console.log(`${socket.id} joined the ${room} room`);
+  });
+
   // any event emitted is read by onAny  
   socket.onAny((event, payload) => {
     let timestamp = new Date();
@@ -24,7 +31,13 @@ caps.on('connection', (socket) => {
 
   // listens for and relays pickup event
   socket.on('pickup', (payload) => {
-    // TODO: for lab-13, need to queue "pickup" messaging to the driver
+    // DONE: for lab-13, need to queue "pickup" messaging to the driver
+    let driverQueue = capsQueue.read('driver');
+    if(!driverQueue){
+      let driverKey = capsQueue.store('driver', new Queue());
+      driverQueue = capsQueue.read(driverKey);
+    }
+    driverQueue.store(payload.messageId, payload);
     // sends to all clients except sender...  other possibilities
     socket.broadcast.emit('pickup', payload);
   });
@@ -36,7 +49,37 @@ caps.on('connection', (socket) => {
 
   socket.on('delivered', (payload) => {
     // TODO: for lab-13, need to queue "delivered" messaging to the vendor
-    socket.broadcast.emit('delivered', payload);
+    let vendorQueue = capsQueue.read(payload.queueId);
+    if(!vendorQueue){
+      let vendorKey = capsQueue.store(payload.queueId, new Queue());
+      vendorQueue = capsQueue.read(vendorKey);
+    }
+    vendorQueue.store(payload.messageId, payload);
+
+    socket.to(payload.queueId).emit('delivered', payload);
+  });
+
+  socket.on('getAll', (payload) => {
+    console.log('attempting to get all');
+    let currentQueue = capsQueue.read(payload.queueId);
+    // console.log(payload.queueId, capsQueue );
+
+    if(currentQueue && currentQueue.data){
+      const ids = Object.keys(currentQueue.data);
+      // console.log(ids);
+      ids.forEach(messageId => {
+        let savedPayload = currentQueue.read(messageId);
+        socket.emit(savedPayload.event, savedPayload);
+      });
+    }
+  });
+
+  socket.on('received', (payload) => {
+    let currentQueue = capsQueue.read(payload.queueId);
+    if(!currentQueue){
+      throw new Error('we have payloads, but no queue');
+    }
+    currentQueue.remove(payload.messageId);
   });
 
 });
