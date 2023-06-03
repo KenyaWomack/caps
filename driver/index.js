@@ -3,6 +3,8 @@
 const { io } = require('socket.io-client');
 const socket = io('http://localhost:3001/caps');
 
+socket.emit('getAll', {queueId: 'driver'});
+
 
 // const eventEmitter = require('../eventPool');
 const  { pickupOccurred, packageDelivered } = require('./handler');
@@ -15,4 +17,5 @@ socket.on('pickup', (payload) => {
   setTimeout(() => {
     packageDelivered(payload, socket);
   }, 2000);
-});
+  socket.emit('received', {queueId: 'driver', messageId: payload.messageId});
+}); 
